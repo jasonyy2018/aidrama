@@ -77,7 +77,7 @@ export default function StoryboardTabPage() {
 
   // 加载本地用户偏好
   useEffect(() => {
-    const savedMode = localStorage.getItem("fusion-storyboard-view-mode");
+    const savedMode = localStorage.getItem("aidrama-storyboard-view-mode");
     if (savedMode === "table" || savedMode === "card") {
       setViewMode(savedMode);
     }
@@ -85,7 +85,7 @@ export default function StoryboardTabPage() {
 
   const handleSetViewMode = useCallback((mode: ViewMode) => {
     setViewMode(mode);
-    localStorage.setItem("fusion-storyboard-view-mode", mode);
+    localStorage.setItem("aidrama-storyboard-view-mode", mode);
   }, []);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [sidebarSelection, setSidebarSelection] = useState<SidebarSelection>({

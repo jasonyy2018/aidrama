@@ -8,25 +8,25 @@ services:
   # ---------- 基础设施 ----------
   postgres:
     image: postgres:16-alpine
-    container_name: fusion-postgres
+    container_name: aidrama-postgres
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: ${PG_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${PG_PASSWORD:-123456}
-      POSTGRES_DB: ${PG_DATABASE:-ai_fusion_video}
+      POSTGRES_DB: ${PG_DATABASE:-aidrama}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PG_USERNAME:-postgres} -d ${PG_DATABASE:-ai_fusion_video}"]
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USERNAME:-postgres} -d ${PG_DATABASE:-aidrama}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: fusion-redis
+    container_name: aidrama-redis
     restart: unless-stopped
     ports:
       - "46379:6379"
@@ -41,12 +41,12 @@ services:
 
   web:
     image: ai-drama-web:latest
-    container_name: fusion-web
+    container_name: aidrama-web
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
-      DATABASE_URL: postgresql://${PG_USERNAME:-postgres}:${PG_PASSWORD:-123456}@postgres:5432/${PG_DATABASE:-ai_fusion_video}
+      DATABASE_URL: postgresql://${PG_USERNAME:-postgres}:${PG_PASSWORD:-123456}@postgres:5432/${PG_DATABASE:-aidrama}
       REDIS_URL: redis://:${REDIS_PASSWORD:-123456}@redis:6379
       AI_DASHSCOPE_API_KEY: ${AI_DASHSCOPE_API_KEY:-sk-placeholder}
     depends_on:

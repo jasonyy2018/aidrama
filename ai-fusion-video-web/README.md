@@ -1,4 +1,4 @@
-# ai-fusion-video-web
+# aidrama-web
 
 AI Drama 前端应用，负责项目管理、剧本与分镜编辑、素材管理、Agent Pipeline 可视化和系统设置等界面能力。
 

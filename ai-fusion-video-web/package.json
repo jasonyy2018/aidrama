@@ -1,8 +1,8 @@
 {
-  "name": "ai-fusion-video-web",
+  "name": "aidrama-web",
   "version": "0.5.1",
   "private": true,
-  "description": "Web application for the AI-driven video creation platform",
+  "description": "Web application for the AI Drama video creation platform",
   "license": "MIT",
 
   "packageManager": "pnpm@10.32.1",

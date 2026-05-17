@@ -317,7 +317,7 @@ export default function GeneralSettingsPage() {
             onChange={(e) =>
               setConfigs((prev) => ({ ...prev, site_base_url: e.target.value }))
             }
-            placeholder="https://fusion.example.com"
+            placeholder="https://aidrama.example.com"
             className={cn(
               "w-full px-4 py-2.5 rounded-xl text-sm",
               "bg-muted/30 border border-border/30",
@@ -335,7 +335,7 @@ export default function GeneralSettingsPage() {
                 <ul className="list-disc list-inside space-y-0.5">
                   <li>本地开发：<code className="text-foreground/80">http://localhost:8080</code></li>
                   <li>内网部署：<code className="text-foreground/80">http://192.168.1.100:8080</code></li>
-                  <li>公网部署：<code className="text-foreground/80">https://fusion.example.com</code></li>
+                  <li>公网部署：<code className="text-foreground/80">https://aidrama.example.com</code></li>
                 </ul>
               </div>
             </div>

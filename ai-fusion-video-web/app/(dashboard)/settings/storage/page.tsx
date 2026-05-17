@@ -59,7 +59,7 @@ function getStorageTypeFields(type: string) {
         { key: "accessKey", label: "Access Key", placeholder: "LTAI...", type: "password" as const, required: true },
         { key: "secretKey", label: "Secret Key", placeholder: "...", type: "password" as const, required: true },
         { key: "region", label: "Region", placeholder: "cn-hangzhou / us-east-1", type: "text" as const },
-        { key: "basePath", label: "Key 前缀", placeholder: "ai-fusion/（可选）", type: "text" as const },
+        { key: "basePath", label: "Key 前缀", placeholder: "aidrama/（可选）", type: "text" as const },
         { key: "customDomain", label: "自定义域名", placeholder: "https://cdn.example.com（可选）", type: "text" as const },
       ];
     default:

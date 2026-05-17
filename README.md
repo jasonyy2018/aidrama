@@ -63,11 +63,11 @@ https://github.com/user-attachments/assets/be99d4c1-dc09-4616-8fba-06cb959c84c8
 
 ### 方式一：Docker 一键部署（推荐）
 
-只需安装 Docker，无需配置 Java / Node.js 环境。
+只需安装 Docker，无需配置复杂的环境。
 
 ```bash
 git clone <your-repository-url>.git
-cd ai-fusion-video
+cd aidrama
 
 # 可选：复制并修改环境变量
 cp .env.example .env
@@ -82,27 +82,26 @@ docker compose up -d
 docker compose -f docker-compose.build.yml up -d --build
 ```
 
-启动后访问 `http://localhost:8080` 即可使用（可在 `.env` 中通过 `APP_PORT` 修改端口）。
+启动后访问 `http://localhost:3000` 即可使用（可在 `.env` 中通过 `APP_PORT` 修改端口）。
 
 ### 方式二：源码开发
 
-**环境要求**：JDK 21+、Node.js 20+、pnpm 9+、Docker
+**环境要求**：Node.js 20+、pnpm 10+、Docker (用于运行 PostgreSQL/Redis 基础设施)
 
 ```bash
-# 1. 启动 MySQL 和 Redis
-cd ai-fusion-video
-docker compose -f docker-compose-middleware.yml up -d
+# 1. 复制环境变量配置文件并根据需要进行修改
+cp .env.example .env
 
-# 2. 启动后端
-./mvnw spring-boot:run
+# 2. 启动 PostgreSQL 和 Redis 基础设施
+docker compose up postgres redis -d
 
-# 3. 启动前端（新开终端）
+# 3. 安装依赖并启动 Next.js 全栈应用
 cd ai-fusion-video-web
 pnpm install
 pnpm dev
 ```
 
-启动后访问 `http://localhost:3000`，后端 API 位于 `http://localhost:18080`。
+启动后访问 `http://localhost:3000` 即可开始开发与体验！
 
 ---
 
@@ -110,21 +109,11 @@ pnpm dev
 
 ### 数据库 & Redis
 
-**Docker 部署**：编辑项目根目录的 `.env` 文件（从 `.env.example` 复制），可配置端口和密码等。
+**Docker 部署 / 源码开发**：编辑项目根目录的 `.env` 文件（从 `.env.example` 复制），可配置端口、密码、以及数据库连接等环境变量：
 
-**源码开发**：编辑 `ai-fusion-video/src/main/resources/application-local.yaml`：
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:43306/ai_fusion_video
-    username: root
-    password: 123456
-  data:
-    redis:
-      host: localhost
-      port: 46379
-      password: 123456
+```env
+PG_DATABASE=aidrama
+REDIS_PASSWORD=123456
 ```
 
 ### AI 模型
