@@ -13,7 +13,7 @@ import { logger } from "@/lib/logger";
 export async function POST(req: NextRequest) {
   try {
     logger.info("收到系统初始化设置请求");
-    
+
     // 检查是否已经存在用户
     const [userCountResult] = await db.select({ value: count() }).from(users);
     if (userCountResult.value > 0) {

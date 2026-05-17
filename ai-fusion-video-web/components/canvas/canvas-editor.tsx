@@ -11,6 +11,7 @@ import {
 import "tldraw/tldraw.css";
 import { ShotCardShapeUtil } from "./shapes/shot-card-shape";
 import type { ShotCardShape } from "./shapes/shot-card-shape";
+import { CharacterAnchorShapeUtil } from "./shapes/character-anchor-shape";
 import type { ShapeBindings, CanvasSnapshotData, ShotCardShapeProps } from "@/types/canvas";
 import type { StoryboardItem } from "@/lib/db/schema";
 import dynamic from "next/dynamic";
@@ -18,8 +19,16 @@ import dynamic from "next/dynamic";
 // 属性面板动态导入（避免 SSR）
 const ShotPropertiesPanel = dynamic(() => import("./shot-properties-panel"), { ssr: false });
 
-const CUSTOM_SHAPE_UTILS = [ShotCardShapeUtil];
+const CUSTOM_SHAPE_UTILS = [ShotCardShapeUtil, CharacterAnchorShapeUtil];
 const CUSTOM_TOOLS: never[] = [];
+
+interface AssetItem {
+  id: number;
+  type: string;
+  name: string;
+  description: string | null;
+  coverUrl: string | null;
+}
 
 interface CanvasEditorProps {
   projectId: number;
@@ -216,7 +225,7 @@ function InnerCanvas({
   }, [editor, onSelectionChange]);
 
   /**
-   * 同步已绑定 ShotCard 的 props（从 storyboard items 更新）
+   * 同步已绑定形状的 props（从 storyboard items 更新）
    */
   useEffect(() => {
     if (!editor || storyboardItems.length === 0) return;
@@ -272,6 +281,7 @@ export default function CanvasEditor({
   const [selectedShape, setSelectedShape] = useState<ShotCardShape | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importingAssets, setImportingAssets] = useState(false);
 
   // 选中 ShotCard 时打开属性面板
   const handleSelectionChange = useCallback((shape: ShotCardShape | null) => {
@@ -321,6 +331,122 @@ export default function CanvasEditor({
       setImporting(false);
     }
   }, [editor, storyboardId, importing, shapeBindingsRef]);
+
+  // 从资产库导入素材（角色/场景/道具）
+  const handleImportAssets = useCallback(async () => {
+    if (!editor || importingAssets) return;
+    setImportingAssets(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/assets?type=character,scene,prop`);
+      const data = await res.json() as { code: number; data: AssetItem[] };
+      if (data.code !== 200 || !data.data?.length) return;
+
+      const existingEntityIds = new Set(
+        Object.values(shapeBindingsRef.current)
+          .filter(b => b.type === "asset")
+          .map(b => b.entityId)
+      );
+      const newAssets = data.data.filter(a => !existingEntityIds.has(a.id));
+
+      if (newAssets.length === 0) {
+        alert("所有素材已在画布中，无需重复导入");
+        return;
+      }
+
+      // 从画布中心开始放置
+      const center = editor.getViewportPageBounds().center;
+      const COLS = Math.min(Math.ceil(Math.sqrt(newAssets.length)), 4);
+      const CARD_W = 180;
+      const CARD_H = 64;
+      const GAP = 16;
+      const totalW = COLS * CARD_W + (COLS - 1) * GAP;
+      const startX = center.x - totalW / 2;
+      const startY = center.y - 50;
+
+      editor.run(() => {
+        newAssets.forEach((asset, idx) => {
+          const col = idx % COLS;
+          const row = Math.floor(idx / COLS);
+          const x = startX + col * (CARD_W + GAP);
+          const y = startY + row * (CARD_H + GAP) + 200;
+          const shapeId = createShapeId();
+
+          editor.createShape({
+            id: shapeId,
+            type: "character-anchor" as any,
+            x,
+            y,
+            props: {
+              w: CARD_W,
+              h: CARD_H,
+              assetId: asset.id,
+              name: asset.name,
+              coverUrl: asset.coverUrl,
+              description: asset.description ?? "",
+              assetType: asset.type,
+            },
+          });
+
+          shapeBindingsRef.current[shapeId] = {
+            type: "asset",
+            entityId: asset.id,
+          };
+        });
+      });
+    } catch (err) {
+      console.error("[canvas] 导入素材失败", err);
+    } finally {
+      setImportingAssets(false);
+    }
+  }, [editor, projectId, importingAssets, shapeBindingsRef]);
+
+  // 缩放至适应所有形状
+  const handleZoomToFit = useCallback(() => {
+    if (!editor) return;
+    editor.zoomToFit();
+  }, [editor]);
+
+  // 自动排列：将画布上所有形状按网格重新排列
+  const handleOrganizeLayout = useCallback(() => {
+    if (!editor) return;
+    const shapes = editor.getCurrentPageShapes();
+    if (shapes.length === 0) return;
+
+    const shotCards = shapes.filter(s => (s.type as string) === "shot-card");
+    const anchors = shapes.filter(s => (s.type as string) === "character-anchor");
+    const others = shapes.filter(s => (s.type as string) !== "shot-card" && (s.type as string) !== "character-anchor");
+
+    const GAP = 24;
+    const startX = -400;
+    const startY = -300;
+    let currentX = startX;
+    let currentY = startY;
+    const maxWidth = 1400;
+
+    editor.run(() => {
+      const updates: Array<{ id: string; type: string; x: number; y: number }> = [];
+
+      const placeShape = (shape: { id: string; type: string; x: number; y: number }, w: number) => {
+        if (currentX + w > startX + maxWidth) {
+          currentX = startX;
+          currentY += 380;
+        }
+        updates.push({ id: shape.id, type: shape.type, x: currentX, y: currentY });
+        currentX += w + GAP;
+      };
+
+      shotCards.forEach(s => placeShape(s, 280));
+      currentX = startX;
+      currentY += 420;
+      anchors.forEach(a => placeShape(a, 180));
+      currentX = startX;
+      currentY += 120;
+      others.forEach(o => placeShape(o, 200));
+
+      editor.updateShapes(updates as any);
+      editor.zoomToFit();
+    });
+  }, [editor]);
 
   const handleMount = useCallback(
     (ed: Editor) => {
@@ -390,12 +516,12 @@ export default function CanvasEditor({
             transform: "translateX(-50%)",
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: 6,
             background: "rgba(20,20,28,0.85)",
             backdropFilter: "blur(12px)",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 12,
-            padding: "6px 12px",
+            padding: "6px 10px",
             zIndex: 500,
             pointerEvents: "all",
           }}
@@ -408,8 +534,8 @@ export default function CanvasEditor({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
-                padding: "5px 12px",
+                gap: 4,
+                padding: "5px 10px",
                 borderRadius: 8,
                 border: "1px solid rgba(139,92,246,0.3)",
                 background: importing
@@ -421,28 +547,114 @@ export default function CanvasEditor({
                 cursor: importing ? "not-allowed" : "pointer",
                 transition: "all 0.15s ease",
                 fontFamily: "system-ui, sans-serif",
+                whiteSpace: "nowrap",
               }}
               title="将分镜列表中的所有条目导入为 ShotCard"
             >
               {importing ? (
-                <>
-                  <span style={{
-                    width: 12, height: 12, borderRadius: "50%",
-                    border: "1.5px solid rgba(196,181,253,0.3)",
-                    borderTopColor: "#c4b5fd",
-                    display: "inline-block",
-                    animation: "spin 0.8s linear infinite",
-                  }} />
-                  导入中…
-                </>
-              ) : (
-                <>
-                  <span style={{ fontSize: 14 }}>🎬</span>
-                  从分镜导入
-                </>
-              )}
+                <span style={{
+                  width: 12, height: 12, borderRadius: "50%",
+                  border: "1.5px solid rgba(196,181,253,0.3)",
+                  borderTopColor: "#c4b5fd",
+                  display: "inline-block",
+                  animation: "spin 0.8s linear infinite",
+                }} />
+              ) : <span style={{ fontSize: 14 }}>🎬</span>}
+              {importing ? "导入中…" : "分镜"}
             </button>
           )}
+
+          {/* 从资产库导入按钮 */}
+          <button
+            onClick={handleImportAssets}
+            disabled={importingAssets}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "5px 10px",
+              borderRadius: 8,
+              border: "1px solid rgba(52,211,153,0.3)",
+              background: importingAssets
+                ? "rgba(52,211,153,0.05)"
+                : "rgba(52,211,153,0.12)",
+              color: importingAssets ? "rgba(52,211,153,0.4)" : "#34d399",
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: importingAssets ? "not-allowed" : "pointer",
+              transition: "all 0.15s ease",
+              fontFamily: "system-ui, sans-serif",
+              whiteSpace: "nowrap",
+            }}
+            title="从资产库导入角色/场景/道具到画布"
+          >
+            {importingAssets ? (
+              <span style={{
+                width: 12, height: 12, borderRadius: "50%",
+                border: "1.5px solid rgba(52,211,153,0.3)",
+                borderTopColor: "#34d399",
+                display: "inline-block",
+                animation: "spin 0.8s linear infinite",
+              }} />
+            ) : <span style={{ fontSize: 14 }}>📦</span>}
+            {importingAssets ? "导入中…" : "素材"}
+          </button>
+
+          {/* 分隔线 */}
+          <div style={{
+            width: 1, height: 20,
+            background: "rgba(255,255,255,0.08)",
+          }} />
+
+          {/* 缩放至适应 */}
+          <button
+            onClick={handleZoomToFit}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              border: "none",
+              background: "transparent",
+              color: "rgba(255,255,255,0.6)",
+              fontSize: 14,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            title="缩放至适应所有形状"
+          >
+            ⊞
+          </button>
+
+          {/* 自动排列 */}
+          <button
+            onClick={handleOrganizeLayout}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              border: "none",
+              background: "transparent",
+              color: "rgba(255,255,255,0.6)",
+              fontSize: 14,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            title="自动排列画布元素"
+          >
+            ⊡
+          </button>
+
+          {/* 分隔线 */}
+          <div style={{
+            width: 1, height: 20,
+            background: "rgba(255,255,255,0.08)",
+          }} />
 
           {/* 保存状态 */}
           <span style={{
@@ -451,6 +663,7 @@ export default function CanvasEditor({
               ? "rgba(74,222,128,0.7)"
               : "rgba(255,255,255,0.3)",
             padding: "0 4px",
+            whiteSpace: "nowrap",
           }}>
             {saveStatus === "saving" ? "● 保存中..." : "✓ 已保存"}
           </span>

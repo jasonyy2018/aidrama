@@ -23,7 +23,7 @@ export const users = pgTable(
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
     username: varchar("username", { length: 64 }).notNull(),
-    password: varchar("password", { length: 128 }).notNull(),
+    password: varchar("password", { length: 255 }).notNull(),
     nickname: varchar("nickname", { length: 64 }),
     avatar: varchar("avatar", { length: 512 }),
     email: varchar("email", { length: 128 }),

@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { X, Save, Image as ImageIcon, Video, ChevronDown, ChevronUp, Loader2, ExternalLink } from "lucide-react";
-import type { ShotCardShape } from "./shapes/shot-card-shape";
+import { X, Save, Image as ImageIcon, Video, ChevronDown, ChevronUp, Loader2, ExternalLink, Sparkles, Film } from "lucide-react";
 import type { ShapeBindings } from "@/types/canvas";
+import type { ShotCardNodeData } from "./nodes/shot-card-node";
+
+interface ShotCardShape {
+  id: string;
+  props: ShotCardNodeData & { w: number; h: number };
+}
 
 interface ShotPropertiesPanelProps {
   /** 当前选中的 ShotCard shape */
@@ -15,7 +20,11 @@ interface ShotPropertiesPanelProps {
   /** 关闭面板 */
   onClose: () => void;
   /** 属性更新后通知 canvas editor 更新 shape */
-  onPropsUpdated: (shapeId: string, props: Partial<ShotCardShape["props"]>) => void;
+  onPropsUpdated: (shapeId: string, shapeType: string, props: Record<string, unknown>) => void;
+  /** 生成图片 */
+  onGenerateImage?: (itemId: number, shapeId: string) => void;
+  /** 生成视频 */
+  onGenerateVideo?: (itemId: number, shapeId: string) => void;
 }
 
 interface FormState {
@@ -41,6 +50,8 @@ export default function ShotPropertiesPanel({
   projectId,
   onClose,
   onPropsUpdated,
+  onGenerateImage,
+  onGenerateVideo,
 }: ShotPropertiesPanelProps) {
   const [form, setForm] = useState<FormState>({
     content: "",
@@ -123,7 +134,7 @@ export default function ShotPropertiesPanel({
       });
       if (res.ok) {
         // 更新 Canvas 中的 ShotCard props（避免重新加载整页）
-        onPropsUpdated(selectedShape.id, {
+        onPropsUpdated(selectedShape.id, "shot-card", {
           content: form.content,
           sceneExpectation: form.sceneExpectation,
           shotType: form.shotType,
@@ -338,6 +349,72 @@ export default function ShotPropertiesPanel({
           }}
         />
       </div>
+
+      {/* ─── AI 生成操作区 ─── */}
+      {itemId && (
+        <div style={{
+          padding: "10px 16px",
+          display: "flex",
+          gap: 8,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(139,92,246,0.04)",
+        }}>
+          <button
+            onClick={() => onGenerateImage?.(itemId, selectedShape.id)}
+            disabled={generationStatus === "generating-image" || generationStatus === "generating-video"}
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              padding: "7px 12px",
+              borderRadius: 8,
+              border: "1px solid rgba(96,165,250,0.3)",
+              background: "rgba(96,165,250,0.1)",
+              color: displayImage ? "rgba(96,165,250,0.4)" : "#93c5fd",
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: generationStatus === "generating-image" || generationStatus === "generating-video" ? "not-allowed" : "pointer",
+              opacity: displayImage ? 0.5 : 1,
+              transition: "all 0.15s",
+            }}
+            title={displayImage ? "已生成画面" : "AI 生成此镜头的画面"}
+          >
+            {generationStatus === "generating-image" ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : <Sparkles size={14} />}
+            {displayImage ? "重新生图" : "生成画面"}
+          </button>
+          <button
+            onClick={() => onGenerateVideo?.(itemId, selectedShape.id)}
+            disabled={generationStatus === "generating-image" || generationStatus === "generating-video" || !displayImage}
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              padding: "7px 12px",
+              borderRadius: 8,
+              border: `1px solid ${displayVideo ? "rgba(74,222,128,0.3)" : "rgba(167,139,250,0.3)"}`,
+              background: displayVideo ? "rgba(74,222,128,0.08)" : "rgba(167,139,250,0.1)",
+              color: displayVideo ? "#4ade80" : displayImage ? "#c4b5fd" : "rgba(167,139,250,0.4)",
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: generationStatus === "generating-image" || generationStatus === "generating-video" || !displayImage ? "not-allowed" : "pointer",
+              opacity: !displayImage ? 0.4 : 1,
+              transition: "all 0.15s",
+            }}
+            title={!displayImage ? "请先生成画面" : displayVideo ? "已生成视频" : "AI 生成此镜头的视频"}
+          >
+            {generationStatus === "generating-video" ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : <Film size={14} />}
+            {displayVideo ? "重新生成" : displayImage ? "生成视频" : "需先有画面"}
+          </button>
+        </div>
+      )}
 
       {/* ─── 内容区（可滚动） ─── */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 0 16px" }}>
