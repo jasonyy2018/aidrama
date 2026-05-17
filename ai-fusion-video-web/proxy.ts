@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 // 不需要认证的路径
 const PUBLIC_PATHS = ["/login", "/register", "/setup"];
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 静态资源和 API 路由不拦截

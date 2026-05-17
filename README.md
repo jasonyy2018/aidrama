@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="assets/logo.png" alt="AI Drama Logo" width="368" />
+  <img src="assets/logo.png" alt="AI Drama Video Logo" width="368" />
 </p>
 <p align="center">
-  <strong>AI Drama，基于 Agent 的智能微短剧创作平台</strong>
+  <strong>AI Drama Video，基于 Agent 的智能微短剧创作平台</strong>
 </p>
 ---
 
 ## 📖 项目简介
 
-AI Drama (脑海译 / Naohaiyi) 是一款面向内容创作者的 AI 微短剧与视频创作平台。你可以在平台上编写剧本，AI 会自动将剧本拆解为分镜画面，并利用多家主流 AI 模型生成配图和视频片段，让视频创作流程更高效、更智能。
+AI Drama Video (脑海译 / Naohaiyi) 是一款面向内容创作者的 AI 微短剧与视频创作平台。你可以在平台上编写剧本，AI 会自动将剧本拆解为分镜画面，并利用多家主流 AI 模型生成配图和视频片段，让视频创作流程更高效、更智能。
 
 **技术栈**：全栈 Next.js 16 + React 19 + TypeScript + PostgreSQL (Drizzle ORM)。
 
@@ -96,7 +96,7 @@ cp .env.example .env
 docker compose up postgres redis -d
 
 # 3. 安装依赖并启动 Next.js 全栈应用
-cd ai-fusion-video-web
+cd aidrama-web
 pnpm install
 pnpm dev
 ```

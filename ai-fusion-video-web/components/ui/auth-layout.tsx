@@ -96,12 +96,9 @@ export const AuthLayout = ({
       <div className="relative z-10 flex flex-col flex-1">
         {/* 左上角 Logo + 标题 */}
         <div className="absolute top-6 left-6 z-20 flex items-center gap-3">
-          <Image
-            src="/logo.png"
-            alt="AI Drama"
-            width={480}
-            height={96}
-            priority
+          <img
+            src="/logo.png?v=2"
+            alt="AI Drama Video"
             className="h-10 w-auto"
           />
           <div className="flex items-center text-[1.72rem] font-semibold tracking-[0.02em]">
@@ -109,7 +106,7 @@ export const AuthLayout = ({
               AI
             </span>
             <span className="text-transparent bg-[linear-gradient(96deg,#FCB659_0%,#FF9F68_34%,#E65979_100%)] bg-clip-text drop-shadow-[0_0_10px_rgba(230,89,121,0.14)] font-light ml-1.5">
-              Drama
+              Drama Video
             </span>
           </div>
         </div>

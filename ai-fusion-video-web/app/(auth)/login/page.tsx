@@ -198,7 +198,7 @@ function LoginContent() {
 
       {/* 底部信息 */}
       <p className="text-xs text-white/30 pt-8">
-        AI Drama · AI微短剧创作平台
+        AI Drama Video · AI微短剧创作平台
       </p>
     </AuthLayout>
   );

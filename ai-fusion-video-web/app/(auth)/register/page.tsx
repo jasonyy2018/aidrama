@@ -257,7 +257,7 @@ export default function RegisterPage() {
         </Link>
       </p>
 
-      <p className="text-xs text-white/30 pt-4">AI Drama · 公开注册</p>
+      <p className="text-xs text-white/30 pt-4">AI Drama Video · 公开注册</p>
     </AuthLayout>
   );
 }

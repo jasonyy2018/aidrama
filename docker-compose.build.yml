@@ -1,5 +1,5 @@
 # ============================================
-# AI Drama - Docker Compose (本地构建 Next.js 全栈)
+# AI Drama Video - Docker Compose (本地构建 Next.js 全栈)
 # ============================================
 # 使用方式: docker compose -f docker-compose.build.yml up -d --build
 # ============================================
@@ -42,7 +42,7 @@ services:
   # ---------- Next.js 全栈应用 (本地构建) ----------
   web:
     build:
-      context: ./ai-fusion-video-web
+      context: ./aidrama-web
       dockerfile: Dockerfile
     image: aidrama-web:local
     container_name: aidrama-web

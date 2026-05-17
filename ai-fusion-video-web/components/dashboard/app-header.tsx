@@ -167,11 +167,11 @@ export function AppHeader() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo.png"
-              alt="AI Drama"
+              src="/logo.png?v=2"
+              alt="AI Drama Video"
               className="h-8 w-auto ml-2 rounded-lg"
             />
-            <span className="ml-2 text-lg font-bold text-foreground">AI Drama</span>
+            <span className="ml-2 text-lg font-bold text-foreground">AI Drama Video</span>
           </div>
         }
         mobileControls={

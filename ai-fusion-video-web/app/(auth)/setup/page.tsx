@@ -222,7 +222,7 @@ export default function SetupPage() {
 
       {/* 底部信息 */}
       <p className="text-xs text-white/30 pt-4">
-        AI Drama · 首次启动配置
+        AI Drama Video · 首次启动配置
       </p>
     </AuthLayout>
   );

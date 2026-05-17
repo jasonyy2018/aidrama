@@ -170,7 +170,7 @@ export default function DashboardPage() {
           </span>
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          欢迎回到 AI Drama，开始你的视频创作之旅
+          欢迎回到 AI Drama Video，开始你的视频创作之旅
         </p>
       </motion.div>
 
