@@ -4,10 +4,6 @@
 <p align="center">
   <strong>AI Drama，基于 Agent 的智能微短剧创作平台</strong>
 </p>
-<p align="center">
-  <img src="https://img.shields.io/github/v/release/Stonewuu/ai-fusion-video?display_name=tag" alt="version" />
-</p>
-
 ---
 
 ## 📖 项目简介
@@ -15,12 +11,6 @@
 AI Drama (脑海译 / Naohaiyi) 是一款面向内容创作者的 AI 微短剧与视频创作平台。你可以在平台上编写剧本，AI 会自动将剧本拆解为分镜画面，并利用多家主流 AI 模型生成配图和视频片段，让视频创作流程更高效、更智能。
 
 **技术栈**：全栈 Next.js 16 + React 19 + TypeScript + PostgreSQL (Drizzle ORM)。
-
-### 交流群二维码(由于交流群人数人数超200，请先加我微信，我再拉进群)：
-<p align="center">
-  <img src="https://image.stonewu.com/file/wechat-qrcode.png" alt="邀请二维码" width="368" />
-  <img src="https://image.stonewu.com/file/ai-fusion-video-qrcode-group.png" alt="交流群二维码" width="368" />
-</p>
 
 ---
 
@@ -76,8 +66,7 @@ https://github.com/user-attachments/assets/be99d4c1-dc09-4616-8fba-06cb959c84c8
 只需安装 Docker，无需配置 Java / Node.js 环境。
 
 ```bash
-# 克隆项目
-git clone https://github.com/Stonewuu/ai-fusion-video.git
+git clone <your-repository-url>.git
 cd ai-fusion-video
 
 # 可选：复制并修改环境变量
@@ -155,13 +144,6 @@ AI 模型可在系统设置页面动态管理，支持以下提供商：
 
 支持通过系统设置页面配置 S3 兼容的对象存储（阿里云 OSS、腾讯 COS、MinIO 等），也支持本地文件存储。
 
----
-
-## ⭐ Star 趋势
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Stonewuu/ai-fusion-video&type=Date)](https://star-history.com/#Stonewuu/ai-fusion-video&Date)
-
-
 ## 🙏 致谢
 
 - 感谢 [LinuxDo](https://linux.do) 论坛的支持
@@ -172,9 +154,3 @@ AI 模型可在系统设置页面动态管理，支持以下提供商：
 ## 📄 License
 
 [MIT License](LICENSE)
-
----
-
-<p align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/Stonewuu">Stonewu</a></sub>
-</p>

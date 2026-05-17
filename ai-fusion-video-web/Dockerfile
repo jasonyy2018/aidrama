@@ -26,11 +26,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN corepack enable pnpm
 RUN --mount=type=cache,target=/build/.next/cache pnpm build
-
 # ---------- 阶段 3: 运行 ----------
 FROM node:20-bookworm-slim
-
-LABEL maintainer="Stonewu <https://github.com/Stonewuu>"
 
 WORKDIR /app
 

@@ -39,9 +39,8 @@ services:
       timeout: 5s
       retries: 5
 
-  # ---------- Next.js 全栈应用 ----------
   web:
-    image: stonewuu/ai-fusion-video-web:latest
+    image: ai-drama-web:latest
     container_name: fusion-web
     restart: unless-stopped
     ports:
