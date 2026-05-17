@@ -1,0 +1,64 @@
+# ============================================
+# AI Drama - Docker Compose (本地构建 Next.js 全栈)
+# ============================================
+# 使用方式: docker compose -f docker-compose.build.yml up -d --build
+# ============================================
+
+services:
+  # ---------- 基础设施 ----------
+  postgres:
+    image: postgres:16-alpine
+    container_name: fusion-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${PG_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-123456}
+      POSTGRES_DB: ${PG_DATABASE:-ai_fusion_video}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USERNAME:-postgres} -d ${PG_DATABASE:-ai_fusion_video}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: fusion-redis
+    restart: unless-stopped
+    ports:
+      - "46379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-123456}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-123456}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Next.js 全栈应用 (本地构建) ----------
+  web:
+    build:
+      context: ./ai-fusion-video-web
+      dockerfile: Dockerfile
+    image: ai-fusion-video-web:local
+    container_name: fusion-web
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://${PG_USERNAME:-postgres}:${PG_PASSWORD:-123456}@postgres:5432/${PG_DATABASE:-ai_fusion_video}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-123456}@redis:6379
+      AI_DASHSCOPE_API_KEY: ${AI_DASHSCOPE_API_KEY:-sk-placeholder}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
