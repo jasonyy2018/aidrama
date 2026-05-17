@@ -108,7 +108,7 @@ Dashboard 布局采用 `h-screen overflow-hidden flex flex-col` 限制整个页�
 
 ## 安装组件
 
-使用 **pnpm** 安装 shadcn 组件，在 `ai-fusion-video-web` 目录下执行：
+使用 **pnpm** 安装 shadcn 组件，在 `ai-drama-video-web` 目录下执行：
 
 ```bash
 pnpm dlx shadcn@latest add <component-name> --yes
@@ -123,7 +123,7 @@ pnpm dlx shadcn@latest add dialog --yes
 ## 注意事项
 
 1. **禁止使用 npx**，统一使用 `pnpm dlx`
-2. 安装命令必须在 `ai-fusion-video-web` 目录下执行
+2. 安装命令必须在 `ai-drama-video-web` 目录下执行
 3. 安装后组件会自动生成到 `components/ui/` 目录
 4. 使用时通过 `@/components/ui/<component>` 路径导入
 5. **严禁修改 `components/ui/` 下的组件源码**，样式调整通过使用处的 `className` 覆盖

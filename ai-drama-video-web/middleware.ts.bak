@@ -1,0 +1,16 @@
+export { auth as middleware } from "@/auth";
+
+export const config = {
+  matcher: [
+    /*
+     * 匹配所有路径，除了:
+     * - _next/static (静态文件)
+     * - _next/image (图片优化)
+     * - favicon.ico
+     * - api/auth/* (next-auth 路由本身)
+     * - api/canvas/* (画布 API，自带认证)
+     * - login, register, setup (公开页面)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|login|register|setup).*)",
+  ],
+};
