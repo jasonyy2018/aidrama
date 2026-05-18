@@ -12,8 +12,6 @@ services:
     image: postgres:16-alpine
     container_name: aidrama-postgres
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: ${PG_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
@@ -30,8 +28,6 @@ services:
     image: redis:7-alpine
     container_name: aidrama-redis
     restart: unless-stopped
-    ports:
-      - "46379:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data

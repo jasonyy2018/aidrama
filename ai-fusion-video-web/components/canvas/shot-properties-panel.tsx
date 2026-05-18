@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { X, Save, Image as ImageIcon, Video, ChevronDown, ChevronUp, Loader2, ExternalLink } from "lucide-react";
+import { X, Save, Image as ImageIcon, Video, ChevronDown, ChevronUp, Loader2, ExternalLink, Sparkles } from "lucide-react";
+import { usePipelineStore } from "@/lib/store/pipeline-store";
+import { aiModelApi, type AiModel } from "@/lib/api/ai-model";
 import type { ShotCardShape } from "./shapes/shot-card-shape";
 import type { ShapeBindings } from "@/types/canvas";
 
@@ -58,6 +60,11 @@ export default function ShotPropertiesPanel({
   const [saveOk, setSaveOk] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("basic");
   const [itemId, setItemId] = useState<number | null>(null);
+  const [generating, setGenerating] = useState<"idle" | "image" | "video">("idle");
+  const [imageModels, setImageModels] = useState<AiModel[]>([]);
+  const [videoModels, setVideoModels] = useState<AiModel[]>([]);
+  const [selImageModelId, setSelImageModelId] = useState<number | null>(null);
+  const [selVideoModelId, setSelVideoModelId] = useState<number | null>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDirtyRef = useRef(false);
 
@@ -111,6 +118,19 @@ export default function ShotPropertiesPanel({
     }
   }, [selectedShape?.id, shapeBindings]);
 
+  // 加载可用模型
+  useEffect(() => {
+    aiModelApi.listByType(2).then(setImageModels).catch(() => {});
+    aiModelApi.listByType(3).then(setVideoModels).catch(() => {});
+  }, []);
+
+  // 同步形状中保存的模型 ID
+  useEffect(() => {
+    if (!selectedShape) return;
+    setSelImageModelId(selectedShape.props.imageModelId ?? null);
+    setSelVideoModelId(selectedShape.props.videoModelId ?? null);
+  }, [selectedShape?.id]);
+
   // 保存到 DB 并同步 shape
   const save = useCallback(async () => {
     if (!selectedShape || !itemId) return;
@@ -156,6 +176,76 @@ export default function ShotPropertiesPanel({
     },
     [save]
   );
+
+  const handleGenerateImage = useCallback(async () => {
+    if (!itemId || generating !== "idle") return;
+    setGenerating("image");
+    onPropsUpdated(selectedShape!.id, { generationStatus: "generating-image" as const, imageModelId: selImageModelId, imageModelName: selImageModelId ? (imageModels.find(m => m.id === selImageModelId)?.name ?? "") : "" });
+
+    const req: Record<string, unknown> = { agentType: "asset_image_gen", projectId, context: { selectedStoryboardItemIds: [itemId] } };
+    if (selImageModelId) req.modelId = selImageModelId;
+    const addPipeline = usePipelineStore.getState().addPipeline;
+    addPipeline({
+      label: `生成图片: #${selectedShape?.props.shotNumber || itemId}`,
+      projectId,
+      request: req as any,
+      onComplete: async () => {
+        try {
+          const res = await fetch(`/api/storyboard-items/${itemId}`);
+          const json = await res.json();
+          if (json.code === 200 && json.data) {
+            const d = json.data;
+            onPropsUpdated(selectedShape!.id, {
+              generatedImageUrl: d.generatedImageUrl ?? d.imageUrl ?? null,
+              generationStatus: d.generatedImageUrl ? "done" : "idle",
+            });
+          } else {
+            onPropsUpdated(selectedShape!.id, { generationStatus: "done" });
+          }
+        } catch {
+          onPropsUpdated(selectedShape!.id, { generationStatus: "error" });
+        }
+        setGenerating("idle");
+      },
+    });
+  }, [itemId, generating, projectId, selectedShape, onPropsUpdated]);
+
+  const handleGenerateVideo = useCallback(async () => {
+    if (!itemId || generating !== "idle") return;
+    if (!selectedShape?.props.generatedImageUrl) {
+      alert("请先生成图片");
+      return;
+    }
+    setGenerating("video");
+    onPropsUpdated(selectedShape!.id, { generationStatus: "generating-video" as const, videoModelId: selVideoModelId, videoModelName: selVideoModelId ? (videoModels.find(m => m.id === selVideoModelId)?.name ?? "") : "" });
+
+    const req: Record<string, unknown> = { agentType: "storyboard_video_gen", projectId, context: { selectedStoryboardItemIds: [itemId] } };
+    if (selVideoModelId) req.modelId = selVideoModelId;
+    const addPipeline = usePipelineStore.getState().addPipeline;
+    addPipeline({
+      label: `生成视频: #${selectedShape?.props.shotNumber || itemId}`,
+      projectId,
+      request: req as any,
+      onComplete: async () => {
+        try {
+          const res = await fetch(`/api/storyboard-items/${itemId}`);
+          const json = await res.json();
+          if (json.code === 200 && json.data) {
+            const d = json.data;
+            onPropsUpdated(selectedShape!.id, {
+              generatedVideoUrl: d.generatedVideoUrl ?? d.videoUrl ?? null,
+              generationStatus: d.generatedVideoUrl ? "done" : "idle",
+            });
+          } else {
+            onPropsUpdated(selectedShape!.id, { generationStatus: "done" });
+          }
+        } catch {
+          onPropsUpdated(selectedShape!.id, { generationStatus: "error" });
+        }
+        setGenerating("idle");
+      },
+    });
+  }, [itemId, generating, projectId, selectedShape, onPropsUpdated]);
 
   const toggleSection = (key: string) =>
     setExpandedSection((prev) => (prev === key ? null : key));
@@ -475,6 +565,106 @@ export default function ShotPropertiesPanel({
               style={textareaStyle}
             />
           </Field>
+          <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2, display: "block" }}>生图模型</label>
+              <select
+                value={selImageModelId ?? ""}
+                onChange={(e) => { const v = e.target.value ? Number(e.target.value) : null; setSelImageModelId(v); if (selectedShape) onPropsUpdated(selectedShape.id, { imageModelId: v, imageModelName: v ? (imageModels.find(m => m.id === v)?.name ?? "") : "" }); }}
+                style={selectStyle}
+              >
+                <option value="">默认</option>
+                {imageModels.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2, display: "block" }}>生视频模型</label>
+              <select
+                value={selVideoModelId ?? ""}
+                onChange={(e) => { const v = e.target.value ? Number(e.target.value) : null; setSelVideoModelId(v); if (selectedShape) onPropsUpdated(selectedShape.id, { videoModelId: v, videoModelName: v ? (videoModels.find(m => m.id === v)?.name ?? "") : "" }); }}
+                style={selectStyle}
+              >
+                <option value="">默认</option>
+                {videoModels.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={handleGenerateImage}
+              disabled={generating !== "idle" || !itemId}
+              style={{
+                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                padding: "7px 0", borderRadius: 8,
+                background: generating === "image"
+                  ? "rgba(56,189,248,0.15)"
+                  : displayImage
+                    ? "rgba(74,222,128,0.1)"
+                    : "rgba(56,189,248,0.12)",
+                border: `1px solid ${
+                  generating === "image"
+                    ? "rgba(56,189,248,0.4)"
+                    : displayImage
+                      ? "rgba(74,222,128,0.3)"
+                      : "rgba(56,189,248,0.3)"
+                }`,
+                color: generating === "image"
+                  ? "#38bdf8"
+                  : displayImage
+                    ? "#4ade80"
+                    : "#7dd3fc",
+                fontSize: 12, fontWeight: 500, cursor: generating !== "idle" || !itemId ? "not-allowed" : "pointer",
+                opacity: generating !== "idle" || !itemId ? 0.5 : 1, fontFamily: "inherit",
+              }}
+            >
+              {generating === "image" ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <Sparkles size={13} />
+              )}
+              {generating === "image" ? "生成中..." : displayImage ? "重新生图" : "生成图片"}
+            </button>
+            <button
+              onClick={handleGenerateVideo}
+              disabled={generating !== "idle" || !itemId || !selectedShape?.props.generatedImageUrl}
+              style={{
+                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                padding: "7px 0", borderRadius: 8,
+                background: generating === "video"
+                  ? "rgba(167,139,250,0.15)"
+                  : displayVideo
+                    ? "rgba(74,222,128,0.1)"
+                    : "rgba(167,139,250,0.12)",
+                border: `1px solid ${
+                  generating === "video"
+                    ? "rgba(167,139,250,0.4)"
+                    : displayVideo
+                      ? "rgba(74,222,128,0.3)"
+                      : "rgba(167,139,250,0.3)"
+                }`,
+                color: generating === "video"
+                  ? "#a78bfa"
+                  : displayVideo
+                    ? "#4ade80"
+                    : "#c4b5fd",
+                fontSize: 12, fontWeight: 500,
+                cursor: generating !== "idle" || !itemId || !selectedShape?.props.generatedImageUrl ? "not-allowed" : "pointer",
+                opacity: generating !== "idle" || !itemId || !selectedShape?.props.generatedImageUrl ? 0.5 : 1,
+                fontFamily: "inherit",
+              }}
+            >
+              {generating === "video" ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <Video size={13} />
+              )}
+              {generating === "video" ? "生成中..." : displayVideo ? "重新生成" : "生成视频"}
+            </button>
+          </div>
         </Section>
       </div>
     </div>

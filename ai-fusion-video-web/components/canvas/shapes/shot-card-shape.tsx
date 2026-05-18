@@ -60,6 +60,10 @@ export class ShotCardShapeUtil extends ShapeUtil<any> {
     ),
     episodeTitle: T.string,
     sceneHeading: T.string,
+    imageModelId: T.nullable(T.number),
+    videoModelId: T.nullable(T.number),
+    imageModelName: T.string,
+    videoModelName: T.string,
   };
 
   override getDefaultProps(): ShotCardShape["props"] {
@@ -78,8 +82,12 @@ export class ShotCardShapeUtil extends ShapeUtil<any> {
       dialogue: "",
       cameraMovement: "",
       generationStatus: "idle",
-      episodeTitle: "",
-      sceneHeading: "",
+    episodeTitle: "",
+    sceneHeading: "",
+    imageModelId: null,
+    videoModelId: null,
+    imageModelName: "",
+    videoModelName: "",
     };
   }
 
@@ -120,6 +128,8 @@ export class ShotCardShapeUtil extends ShapeUtil<any> {
       generationStatus,
       sceneHeading,
       episodeTitle,
+      imageModelName,
+      videoModelName,
       w,
       h,
     } = shape.props;
@@ -184,6 +194,13 @@ export class ShotCardShapeUtil extends ShapeUtil<any> {
                 background: "rgba(139,92,246,0.3)", borderRadius: 3,
                 padding: "0 4px", color: "#c4b5fd", fontSize: 10,
               }}>{shotTypeLabel}</span>
+              {(imageModelName || videoModelName) && (
+                <span style={{
+                  background: "rgba(52,211,153,0.2)", borderRadius: 3,
+                  padding: "0 4px", color: "#6ee7b7", fontSize: 8,
+                  maxWidth: 60, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>{imageModelName || videoModelName}</span>
+              )}
             </div>
             <div style={{
               position: "absolute", top: 6, right: 6,
@@ -194,6 +211,8 @@ export class ShotCardShapeUtil extends ShapeUtil<any> {
               <span style={{
                 width: 6, height: 6, borderRadius: "50%",
                 background: statusCfg.dot, display: "inline-block",
+                animation: (generationStatus === "generating-image" || generationStatus === "generating-video")
+                  ? "pulse 1.2s ease-in-out infinite" : "none",
               }} />
               <span style={{ color: "rgba(255,255,255,0.65)" }}>{statusCfg.label}</span>
             </div>

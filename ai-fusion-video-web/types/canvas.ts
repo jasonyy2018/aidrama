@@ -27,6 +27,11 @@ export interface ShotCardShapeProps {
   /** 分集和场次 */
   episodeTitle: string;
   sceneHeading: string;
+  /** 选择的 AI 生成模型 */
+  imageModelId: number | null;
+  videoModelId: number | null;
+  imageModelName: string;
+  videoModelName: string;
 }
 
 // ============================================================
