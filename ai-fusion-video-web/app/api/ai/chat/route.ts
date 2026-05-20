@@ -7,10 +7,12 @@ export const maxDuration = 180;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages, conversationId, modelId } = body as {
+    const { messages, conversationId, modelId, projectId, storyboardId } = body as {
       messages: any[];
       conversationId: string;
       modelId?: number;
+      projectId?: number;
+      storyboardId?: number | null;
     };
 
     if (!messages || messages.length === 0) {
@@ -25,13 +27,15 @@ export async function POST(req: NextRequest) {
     // const session = await auth();
     // requireCurrentUserId() ...
 
-    // 默认回退到一个配置的 modelId (例如 1 代表默认 OpenAI)
+    // 默认回退到一个配置 of modelId (例如 1 代表默认 OpenAI)
     const effectiveModelId = modelId || 1;
 
     const result = await createAgentStream({
       conversationId,
       messages,
       modelId: effectiveModelId,
+      projectId,
+      storyboardId,
     });
 
     // 将 AI 流转换为 HTTP 数据流响应返回给前端 (SSE)

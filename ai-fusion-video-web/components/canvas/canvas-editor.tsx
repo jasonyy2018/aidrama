@@ -728,6 +728,8 @@ export default function CanvasEditor({
         open={agentChatOpen}
         onClose={() => setAgentChatOpen(false)}
         conversationId={conversationId}
+        projectId={projectId}
+        storyboardId={storyboardId ?? null}
         onTagEvents={handleAgentTagEvent}
         canvasContext={{
           scriptContent: useCanvasDataStore.getState().script.content,

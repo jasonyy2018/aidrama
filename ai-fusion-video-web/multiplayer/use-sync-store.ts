@@ -5,6 +5,46 @@ import { computed } from "tldraw";
 
 const SYNC_PORT = process.env.NEXT_PUBLIC_SYNC_PORT || "5847";
 
+function getSyncUrl(roomId: string, protocol: "http" | "ws"): string {
+  const envUrl = process.env.NEXT_PUBLIC_SYNC_URL;
+  if (envUrl) {
+    let url = envUrl;
+    if (protocol === "ws") {
+      if (url.startsWith("http://")) url = url.replace("http://", "ws://");
+      else if (url.startsWith("https://")) url = url.replace("https://", "wss://");
+      else if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
+        url = `ws://${url}`;
+      }
+      return `${url}/?roomId=${encodeURIComponent(roomId)}`;
+    } else {
+      if (url.startsWith("ws://")) url = url.replace("ws://", "http://");
+      else if (url.startsWith("wss://")) url = url.replace("wss://", "https://");
+      else if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = `http://${url}`;
+      }
+      return `${url}/init-room?roomId=${encodeURIComponent(roomId)}`;
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    const wsProto = window.location.protocol === "https:" ? "wss" : "ws";
+    const httpProto = window.location.protocol === "https:" ? "https" : "http";
+    if (protocol === "ws") {
+      return `${wsProto}://${host}:${SYNC_PORT}/?roomId=${encodeURIComponent(roomId)}`;
+    } else {
+      return `${httpProto}://${host}:${SYNC_PORT}/init-room?roomId=${encodeURIComponent(roomId)}`;
+    }
+  }
+
+  // SSR fallback
+  if (protocol === "ws") {
+    return `ws://localhost:${SYNC_PORT}/?roomId=${encodeURIComponent(roomId)}`;
+  } else {
+    return `http://localhost:${SYNC_PORT}/init-room?roomId=${encodeURIComponent(roomId)}`;
+  }
+}
+
 function getUserId(): string {
   if (typeof window === "undefined") return "anon";
   let id = localStorage.getItem("tldraw_user_id");
@@ -52,8 +92,9 @@ export async function initSyncRoom(
   snapshot: any
 ): Promise<void> {
   try {
+    const url = getSyncUrl(roomId, "http");
     await fetch(
-      `http://localhost:${SYNC_PORT}/init-room?roomId=${encodeURIComponent(roomId)}`,
+      url,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,9 +113,8 @@ export async function initSyncRoom(
  * 当 status 为 'synced-remote' 时，将 store 传给 <Tldraw store={store.store}>。
  */
 export function useSyncCanvasStore(roomId: string | null): RemoteTLStoreWithStatus {
-  const uri = roomId
-    ? `ws://localhost:${SYNC_PORT}/?roomId=${encodeURIComponent(roomId)}`
-    : null;
+  const uri = roomId ? getSyncUrl(roomId, "ws") : null;
+
 
   // 当 roomId 为 null 时，返回 disconnected 状态
   const result = useSync({

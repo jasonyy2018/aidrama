@@ -3,15 +3,17 @@ import { db } from "@/lib/db";
 import { agentMessages, AgentMessage, NewAgentMessage } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getLanguageModel } from "./model-factory";
-import { scriptTools } from "./tools";
+import { getScriptTools } from "./tools";
 
 export interface StreamChatRequest {
   conversationId: string;
   messages: any[]; // Used any[] instead of CoreMessage to avoid version conflicts
   modelId: number;
+  projectId?: number;
+  storyboardId?: number | null;
 }
 
-export async function createAgentStream({ conversationId, messages, modelId }: StreamChatRequest) {
+export async function createAgentStream({ conversationId, messages, modelId, projectId, storyboardId }: StreamChatRequest) {
   const model = await getLanguageModel(modelId);
 
   // 获取该对话已有的消息最大 order
@@ -40,11 +42,13 @@ export async function createAgentStream({ conversationId, messages, modelId }: S
   }
 
   // 开始流式调用
+  const tools = getScriptTools({ projectId, storyboardId, conversationId });
+
   const result = streamText({
     model: model,
     messages: messages,
     system: "You are a professional AI Director and Scriptwriter. Follow instructions carefully.",
-    tools: scriptTools,
+    tools: tools,
     // maxSteps: 5, // Requires newer versions of ai SDK, commented out for now
     
     // onStepFinish 用于记录 ReAct 过程中的中间思考和工具调用

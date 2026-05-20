@@ -19,6 +19,8 @@ interface CanvasAgentChatProps {
   open: boolean;
   onClose: () => void;
   conversationId: string;
+  projectId?: number;
+  storyboardId?: number | null;
   onTagEvents: (events: AgentTagEvent[]) => void;
   canvasContext?: CanvasContext;
 }
@@ -40,6 +42,19 @@ function buildSystemPrompt(ctx: CanvasContext): string {
 
   parts.push(...[
     "",
+    "=== HYBRID REACT & XML WORKFLOW ===",
+    "You are equipped with powerful database tools. Follow these strict rules to synchronize database state with the visual canvas:",
+    "",
+    "1. SCRIPT & ASSET PERSISTENCE (extractScript tool):",
+    "   - When the user asks to extract/analyze a script, extract characters, or parse a story, you MUST call the `extractScript` tool first to save the core script, characters, and scene assets into the SQL database.",
+    "   - In your text response, you MUST ALSO wrap the generated raw script content within `<script>...</script>` tags. This enables the frontend to immediately render the visual script card.",
+    "",
+    "2. SHOT LIST & STORYBOARDING PERSISTENCE (generateShotList tool):",
+    "   - When generating or adding storyboard shots, you MUST call the `generateShotList` tool to bulk persist those shot items to the PostgreSQL database under the current storyboard.",
+    "   - In your final response text, you MUST ALSO output each generated shot inside a `<storyboardItem>` tag containing a single JSON string representation. This allows the visual canvas to render the shot cards instantly. Format example:",
+    "     <storyboardItem>{\"shotNumber\": \"1\", \"content\": \"近景特写，主角坚定的眼神\", \"shotType\": \"Close-up\"}</storyboardItem>",
+    "     <storyboardItem>{\"shotNumber\": \"2\", \"content\": \"全景，两军对峙的宏大场面\", \"shotType\": \"Wide shot\"}</storyboardItem>",
+    "",
     "=== RESPONSE FORMAT ===",
     "When generating content, use these XML tags so the canvas can auto-update:",
     "<script>full script content here</script>",
@@ -49,8 +64,8 @@ function buildSystemPrompt(ctx: CanvasContext): string {
     "",
     "Guidelines:",
     "- Respond in Chinese",
-    "- Keep responses concise and actionable",
-    "- Use tags for any new content that should appear on the canvas",
+    "- Keep responses concise, precise, and actionable",
+    "- Always call the corresponding tool first to maintain database persistence, and then output the matching XML tags in your final text response so they appear on the visual canvas.",
   ]);
 
   return parts.join("\n");
@@ -60,6 +75,8 @@ function useAssistantChat(
   conversationId: string,
   onTagEvents: (events: AgentTagEvent[]) => void,
   canvasContext: CanvasContext,
+  projectId?: number,
+  storyboardId?: number | null,
 ) {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [input, setInput] = useState("");
@@ -86,6 +103,8 @@ function useAssistantChat(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationId,
+          projectId,
+          storyboardId,
           messages: [
             { role: "system", content: systemPrompt },
             ...messages.map(m => ({ role: m.role, content: m.content })),
@@ -135,7 +154,7 @@ function useAssistantChat(
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [messages, conversationId, onTagEvents, canvasContext]);
+  }, [messages, conversationId, onTagEvents, canvasContext, projectId, storyboardId]);
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
@@ -144,11 +163,11 @@ function useAssistantChat(
   return { messages, input, setInput, append, isLoading, error, stop, setMessages };
 }
 
-export default function CanvasAgentChat({ open, onClose, conversationId, onTagEvents, canvasContext }: CanvasAgentChatProps) {
+export default function CanvasAgentChat({ open, onClose, conversationId, projectId, storyboardId, onTagEvents, canvasContext }: CanvasAgentChatProps) {
   const ctx: CanvasContext = canvasContext ?? {
     scriptContent: "", assetsCount: 0, scriptPlanContent: "", shotCount: 0,
   };
-  const { messages, input, setInput, append, isLoading, error, stop } = useAssistantChat(conversationId, onTagEvents, ctx);
+  const { messages, input, setInput, append, isLoading, error, stop } = useAssistantChat(conversationId, onTagEvents, ctx, projectId, storyboardId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
