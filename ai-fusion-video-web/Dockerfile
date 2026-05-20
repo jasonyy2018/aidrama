@@ -32,6 +32,7 @@ FROM node:20-bookworm-slim
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV HOSTNAME="0.0.0.0"
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # 复制构建产物

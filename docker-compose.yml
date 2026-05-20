@@ -45,6 +45,7 @@ services:
       DATABASE_URL: postgresql://${PG_USERNAME:-postgres}:${PG_PASSWORD:-123456}@postgres:5432/${PG_DATABASE:-aidrama}
       REDIS_URL: redis://:${REDIS_PASSWORD:-123456}@redis:6379
       AI_DASHSCOPE_API_KEY: ${AI_DASHSCOPE_API_KEY:-sk-placeholder}
+      HOSTNAME: "0.0.0.0"
     depends_on:
       postgres:
         condition: service_healthy

@@ -54,6 +54,7 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       AUTH_SECRET: ${AUTH_SECRET}
       AI_DASHSCOPE_API_KEY: ${AI_DASHSCOPE_API_KEY:-}
+      HOSTNAME: "0.0.0.0"
     env_file:
       - .env
     depends_on:
