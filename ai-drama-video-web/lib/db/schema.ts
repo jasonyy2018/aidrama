@@ -453,6 +453,65 @@ export const agentMessages = pgTable(
 );
 
 // ============================================================
+// afv_script_episode — 剧本分集表
+// ============================================================
+export const scriptEpisodes = pgTable(
+  "afv_script_episode",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    scriptId: bigint("script_id", { mode: "number" }).notNull(),
+    episodeNumber: integer("episode_number").default(1),
+    title: varchar("title", { length: 256 }),
+    synopsis: text("synopsis"),
+    rawContent: text("raw_content"),
+    durationEstimate: integer("duration_estimate"),
+    totalScenes: integer("total_scenes").default(0),
+    sourceType: integer("source_type").default(0),
+    sortOrder: integer("sort_order").default(0),
+    parsingStatus: integer("parsing_status").default(0),
+    status: integer("status").default(0),
+    version: integer("version").default(0),
+    deleted: smallint("deleted").default(0).notNull(),
+    createTime: timestamp("create_time").default(sql`now()`).notNull(),
+    updateTime: timestamp("update_time").default(sql`now()`).notNull(),
+  },
+  (t) => [index("idx_script_episode_script").on(t.scriptId)]
+);
+
+// ============================================================
+// afv_script_scene — 剧本分镜场次表
+// ============================================================
+export const scriptScenes = pgTable(
+  "afv_script_scene",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    episodeId: bigint("episode_id", { mode: "number" }).notNull(),
+    scriptId: bigint("script_id", { mode: "number" }).notNull(),
+    sceneNumber: varchar("scene_number", { length: 32 }),
+    sceneHeading: varchar("scene_heading", { length: 256 }),
+    location: varchar("location", { length: 256 }),
+    timeOfDay: varchar("time_of_day", { length: 64 }),
+    intExt: varchar("int_ext", { length: 32 }),
+    characters: jsonb("characters").$type<string[]>(),
+    characterAssetIds: jsonb("character_asset_ids").$type<number[]>(),
+    sceneAssetId: bigint("scene_asset_id", { mode: "number" }),
+    propAssetIds: jsonb("prop_asset_ids").$type<number[]>(),
+    sceneDescription: text("scene_description"),
+    dialogues: jsonb("dialogues").$type<any[]>(),
+    sortOrder: integer("sort_order").default(0),
+    status: integer("status").default(0),
+    version: integer("version").default(0),
+    deleted: smallint("deleted").default(0).notNull(),
+    createTime: timestamp("create_time").default(sql`now()`).notNull(),
+    updateTime: timestamp("update_time").default(sql`now()`).notNull(),
+  },
+  (t) => [
+    index("idx_script_scene_episode").on(t.episodeId),
+    index("idx_script_scene_script").on(t.scriptId),
+  ]
+);
+
+// ============================================================
 // Relations（用于类型安全的 JOIN 查询）
 // ============================================================
 export const projectsRelations = relations(projects, ({ many }) => ({
@@ -490,6 +549,21 @@ export const canvasSnapshotsRelations = relations(canvasSnapshots, ({ one }) => 
   storyboard: one(storyboards, { fields: [canvasSnapshots.storyboardId], references: [storyboards.id] }),
 }));
 
+export const scriptsRelations = relations(scripts, ({ one, many }) => ({
+  project: one(projects, { fields: [scripts.projectId], references: [projects.id] }),
+  episodes: many(scriptEpisodes),
+}));
+
+export const scriptEpisodesRelations = relations(scriptEpisodes, ({ one, many }) => ({
+  script: one(scripts, { fields: [scriptEpisodes.scriptId], references: [scripts.id] }),
+  scenes: many(scriptScenes),
+}));
+
+export const scriptScenesRelations = relations(scriptScenes, ({ one }) => ({
+  episode: one(scriptEpisodes, { fields: [scriptScenes.episodeId], references: [scriptEpisodes.id] }),
+  script: one(scripts, { fields: [scriptScenes.scriptId], references: [scripts.id] }),
+}));
+
 // ============================================================
 // TypeScript 类型导出
 // ============================================================
@@ -511,3 +585,7 @@ export type NewStoryboard = typeof storyboards.$inferInsert;
 export type NewStoryboardItem = typeof storyboardItems.$inferInsert;
 export type NewCanvasSnapshot = typeof canvasSnapshots.$inferInsert;
 export type NewAgentMessage = typeof agentMessages.$inferInsert;
+export type ScriptEpisode = typeof scriptEpisodes.$inferSelect;
+export type ScriptScene = typeof scriptScenes.$inferSelect;
+export type NewScriptEpisode = typeof scriptEpisodes.$inferInsert;
+export type NewScriptScene = typeof scriptScenes.$inferInsert;

@@ -41,6 +41,7 @@ services:
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3008}:3000"
+      - "${SYNC_PORT:-5858}:5858"
     environment:
       DATABASE_URL: postgresql://${PG_USERNAME:-postgres}:${PG_PASSWORD:-123456}@postgres:5432/${PG_DATABASE:-aidrama}
       REDIS_URL: redis://:${REDIS_PASSWORD:-123456}@redis:6379

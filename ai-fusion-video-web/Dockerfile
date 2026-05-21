@@ -26,6 +26,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN corepack enable pnpm
 RUN --mount=type=cache,target=/build/.next/cache pnpm build
+RUN npx tsc multiplayer/sync-server.ts --module commonjs --target es2020 --outDir dist --skipLibCheck
+
 # ---------- 阶段 3: 运行 ----------
 FROM node:20-bookworm-slim
 
@@ -39,6 +41,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=builder /build/.next/standalone ./
 COPY --from=builder /build/.next/static ./.next/static
 COPY --from=builder /build/public ./public
+COPY --from=builder /build/dist/sync-server.js ./multiplayer/sync-server.js
 
 EXPOSE 3000
 

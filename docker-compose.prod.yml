@@ -40,7 +40,7 @@ services:
   # ---------- Next.js 全栈应用 (本地构建) ----------
   web:
     build:
-      context: ./ai-drama-video-web
+      context: ./ai-fusion-video-web
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-}
@@ -49,6 +49,7 @@ services:
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3008}:3000"
+      - "${SYNC_PORT:-5858}:5858"
     environment:
       DATABASE_URL: postgresql://${PG_USERNAME:-postgres}:${PG_PASSWORD}@postgres:5432/${PG_DATABASE:-aidrama}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
