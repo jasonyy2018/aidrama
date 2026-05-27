@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       )
       .orderBy(desc(scripts.updateTime));
 
-    return NextResponse.json({ code: 200, data: rows });
+    return NextResponse.json({ code: 0, data: rows });
   } catch (err) {
     console.error("[api/script/list GET]", err);
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });

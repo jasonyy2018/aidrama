@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json({ code: 200, data: newScene });
+    return NextResponse.json({ code: 0, data: newScene });
   } catch (err) {
     console.error("[api/script/scene POST]", err);
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });
@@ -148,7 +148,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ code: 404, msg: "场次不存在" }, { status: 404 });
     }
 
-    return NextResponse.json({ code: 200, data: updatedScene });
+    return NextResponse.json({ code: 0, data: updatedScene });
   } catch (err) {
     console.error("[api/script/scene PUT]", err);
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });

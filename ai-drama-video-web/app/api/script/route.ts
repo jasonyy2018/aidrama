@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json({ code: 200, data: newScript });
+    return NextResponse.json({ code: 0, data: newScript });
   } catch (err) {
     console.error("[api/script POST]", err);
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });
@@ -105,7 +105,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ code: 404, msg: "剧本不存在或无权修改" }, { status: 404 });
     }
 
-    return NextResponse.json({ code: 200, data: updatedScript });
+    return NextResponse.json({ code: 0, data: updatedScript });
   } catch (err) {
     console.error("[api/script PUT]", err);
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });

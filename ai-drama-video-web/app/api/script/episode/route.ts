@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json({ code: 200, data: newEpisode });
+    return NextResponse.json({ code: 0, data: newEpisode });
   } catch (err) {
     console.error("[api/script/episode POST]", err);
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });
@@ -111,7 +111,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ code: 404, msg: "分集不存在" }, { status: 404 });
     }
 
-    return NextResponse.json({ code: 200, data: updatedEpisode });
+    return NextResponse.json({ code: 0, data: updatedEpisode });
   } catch (err) {
     console.error("[api/script/episode PUT]", err);
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });
