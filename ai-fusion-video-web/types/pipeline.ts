@@ -1,10 +1,10 @@
 export const PIPELINE_NODE_IDS = {
-  script: "pipeline-script",
-  assets: "pipeline-assets",
-  scriptPlan: "pipeline-scriptPlan",
-  storyboardTable: "pipeline-storyboardTable",
-  storyboard: "pipeline-storyboard",
-  workbench: "pipeline-workbench",
+  script: "shape:pipeline-script",
+  assets: "shape:pipeline-assets",
+  scriptPlan: "shape:pipeline-scriptPlan",
+  storyboardTable: "shape:pipeline-storyboardTable",
+  storyboard: "shape:pipeline-storyboard",
+  workbench: "shape:pipeline-workbench",
 } as const;
 
 export type PipelineNodeType = (typeof PIPELINE_NODE_IDS)[keyof typeof PIPELINE_NODE_IDS];

@@ -540,7 +540,15 @@ export default function CanvasEditor({
     setEditor(ed);
 
     if (initialSnapshot?.snapshot) {
-      try { ed.loadSnapshot(initialSnapshot.snapshot as TLStoreSnapshot); }
+      try {
+        let snapshot = initialSnapshot.snapshot;
+        if (snapshot && typeof snapshot === "object") {
+          const snapshotStr = JSON.stringify(snapshot);
+          const migratedStr = snapshotStr.replace(/"pipeline-(script|assets|scriptPlan|storyboardTable|storyboard|workbench)"/g, '"shape:pipeline-$1"');
+          snapshot = JSON.parse(migratedStr);
+        }
+        ed.loadSnapshot(snapshot as TLStoreSnapshot);
+      }
       catch (err) { console.warn("[canvas] 快照恢复失败，使用空画布", err); }
     }
 
