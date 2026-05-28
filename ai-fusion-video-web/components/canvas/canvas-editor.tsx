@@ -468,7 +468,7 @@ export default function CanvasEditor({
     if (!editor) return;
     setSyncing(true);
     try {
-      const snapshot = (editor.store as any).getSnapshot();
+      const snapshot = editor.store.serialize();
       const roomId = `project_${projectId}`;
       const { initSyncRoom } = await import("@/multiplayer/use-sync-store");
       await initSyncRoom(roomId, snapshot);
