@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { scriptEpisodes } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
-import { requireUserId } from "@/lib/auth/server";
+import { requireSession } from "@/lib/auth/server";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -14,7 +14,7 @@ interface RouteParams {
  */
 export async function GET(_req: NextRequest, { params }: RouteParams) {
   try {
-    await requireUserId();
+    await requireSession();
     const { id } = await params;
     const scriptId = Number(id);
 
@@ -30,8 +30,11 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       .orderBy(asc(scriptEpisodes.sortOrder));
 
     return NextResponse.json({ code: 0, data: rows });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[api/script/[id]/episodes GET]", err);
+    if (err.message === "UNAUTHORIZED" || err.digest?.startsWith("NEXT_REDIRECT")) {
+      return NextResponse.json({ code: 401, msg: "未登录或登录已过期" }, { status: 401 });
+    }
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { scriptEpisodes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { requireUserId } from "@/lib/auth/server";
+import { requireSession } from "@/lib/auth/server";
 
 /**
  * POST /api/script/episode
@@ -10,7 +10,7 @@ import { requireUserId } from "@/lib/auth/server";
  */
 export async function POST(req: NextRequest) {
   try {
-    await requireUserId();
+    await requireSession();
     const body = await req.json() as {
       scriptId: number;
       episodeNumber?: number;
@@ -42,8 +42,11 @@ export async function POST(req: NextRequest) {
       .returning();
 
     return NextResponse.json({ code: 0, data: newEpisode });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[api/script/episode POST]", err);
+    if (err.message === "UNAUTHORIZED" || err.digest?.startsWith("NEXT_REDIRECT")) {
+      return NextResponse.json({ code: 401, msg: "未登录或登录已过期" }, { status: 401 });
+    }
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });
   }
 }
@@ -54,7 +57,7 @@ export async function POST(req: NextRequest) {
  */
 export async function PUT(req: NextRequest) {
   try {
-    await requireUserId();
+    await requireSession();
     const body = await req.json() as {
       id: number;
       title?: string;
@@ -112,8 +115,11 @@ export async function PUT(req: NextRequest) {
     }
 
     return NextResponse.json({ code: 0, data: updatedEpisode });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[api/script/episode PUT]", err);
+    if (err.message === "UNAUTHORIZED" || err.digest?.startsWith("NEXT_REDIRECT")) {
+      return NextResponse.json({ code: 401, msg: "未登录或登录已过期" }, { status: 401 });
+    }
     return NextResponse.json({ code: 500, msg: "服务器错误" }, { status: 500 });
   }
 }
